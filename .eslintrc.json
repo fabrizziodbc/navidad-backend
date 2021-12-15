@@ -9,6 +9,7 @@
     "sourceType": "module"
   },
   "rules": {
+    "import/extensions": ["error", "never", { "js": "always" }],
     "no-console": "off",
     "no-unused-vars": [
       "error",
@@ -16,6 +17,5 @@
         "argsIgnorePattern": "next"
       }
     ]
-  },
-  "import/extensions": ["error", "never"]
+  }
 }
