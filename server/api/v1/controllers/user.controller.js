@@ -1,45 +1,99 @@
-import User from '../models/user.model.js';
+import { validationResult } from 'express-validator';
 import HttpError from '../models/http.error.model.js';
+import User from '../models/user.model.js';
+/* import HttpError from '../models/http.error.model.js'; */
 
-const fetchAll = (req, res, next) => {
-  const users = User.fetchAll();
-  console.log(users);
-  res.json(users);
-};
-const create = (req, res, next) => {
-  const { name, email, password } = req.body;
-  const newUser = new User(name, email, password);
-  newUser.save();
-  res.redirect('/api/users');
-};
-const read = (req, res, next) => {
+const validId = async (req, res, next) => {
   const { id } = req.params;
-  const user = User.fetchById(id);
-  if (!user) {
-    return next(new HttpError('Invalid UserId', 404));
+  try {
+    const data = await User.findById(id).select('-__v');
+    if (!data) {
+      const message = `${User.name} not found`;
+      next({ message, statuscode: 404, level: 'warn' });
+    } else {
+      req.doc = data;
+      next();
+    }
+  } catch (error) {
+    next(new HttpError('Invalid Id', 403));
   }
-  return res.json({ user });
-};
-const update = (req, res, next) => {
-  const { id } = req.params;
-  const { name, email, password } = req.body;
-  const user = User.fetchById(id);
-  if (!user) {
-    return next(new HttpError('Invalid UserId', 404));
-  }
-  User.update(id, { name, email, password });
-  return res.redirect('/api/users');
-};
-const deleteById = (req, res, next) => {
-  const { id } = req.params;
-  const user = User.fetchById(id);
-  if (!user) {
-    return next(new HttpError('Invalid UserId', 404));
-  }
-  User.deleteById(id);
-  return res.redirect('/api/users');
 };
 
-export {
-  fetchAll, create, read, update, deleteById,
+const fetchAll = async (req, res, next) => {
+  try {
+    const data = await User.find({}).select('-password -__v');
+    res.json({ data });
+  } catch (error) {
+    next(new HttpError('Fetching users failed, please try again later', 500));
+  }
 };
+const create = async (req, res, next) => {
+  const errors = validationResult(req);
+  console.log(errors);
+  if (!errors.isEmpty()) {
+    return next(errors);
+  }
+  const { body = {} } = req;
+  let existingUser;
+  try {
+    existingUser = await User.findOne(body.email);
+  } catch (error) {
+    return next(
+      new HttpError('Singing up failed, please try again later', 500),
+    );
+  }
+  if (existingUser) {
+    return next(new HttpError('User already exists, login instead', 404));
+  }
+  const newDocument = new User(body);
+  try {
+    const data = await newDocument.save();
+    const status = 201;
+    return res.status(status).json({ data });
+  } catch (error) {
+    return next(
+      new HttpError('Singing up failed, please try again later', 500),
+    );
+  }
+};
+const read = async (req, res, next) => {
+  const { doc = {} } = req;
+  res.json({ data: doc });
+};
+const update = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(errors);
+  }
+  const { doc = {}, body = {} } = req;
+  if (body.name !== null && body.name !== undefined) {
+    doc.name = body.name;
+  }
+  if (body.email !== null && body.email !== undefined) {
+    doc.email = body.email;
+  }
+  if (body.password !== null && body.password !== undefined) {
+    doc.password = body.password;
+  }
+  try {
+    console.log('doc', doc);
+    const data = await doc.save();
+    return res.json({ data });
+  } catch (error) {
+    return next(
+      new HttpError('Updating data failed, please try again later', 500),
+    );
+  }
+};
+const deleteById = async (req, res, next) => {
+  const { doc = {} } = req;
+  try {
+    const data = await doc.remove();
+    res.json({ data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// eslint-disable-next-line object-curly-newline
+export { validId, fetchAll, create, read, update, deleteById };
