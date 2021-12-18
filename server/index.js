@@ -1,5 +1,5 @@
 import express from 'express';
-
+import { Result } from 'express-validator';
 import api from './api/v1/index.js';
 
 const app = express();
@@ -16,8 +16,11 @@ app.use((req, res, next) => {
   next({ statusCode, message });
 });
 app.use((err, req, res, next) => {
+  if (err instanceof Result) {
+    return res.status(400).json({ errors: err.array() });
+  }
   const { statusCode = 500, message = 'Unknown error' } = err;
-  res.status(statusCode).json({ message });
+  return res.status(statusCode).json({ message });
 });
 
 export default app;
