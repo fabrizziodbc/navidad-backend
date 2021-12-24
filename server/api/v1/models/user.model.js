@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
   },
   password: { type: String, required: true },
+  list: [{ type: mongoose.Types.ObjectId, required: true, ref: 'list' }],
   date: { type: Date, default: Date.now },
   active: { type: Boolean, default: true },
 });
