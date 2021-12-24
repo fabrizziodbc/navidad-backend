@@ -1,12 +1,14 @@
 import { validationResult } from 'express-validator';
 import HttpError from '../models/http.error.model.js';
+import List from '../models/list.model.js';
 import User from '../models/user.model.js';
-/* import HttpError from '../models/http.error.model.js'; */
 
 const validId = async (req, res, next) => {
   const { id } = req.params;
   try {
-    const data = await User.findById(id).select('-__v');
+    const data = await User.findById(id)
+      .select('-__v')
+      .populate('list', 'listName');
     if (!data) {
       const message = `${User.name} not found`;
       next({ message, statuscode: 404, level: 'warn' });
@@ -21,7 +23,9 @@ const validId = async (req, res, next) => {
 
 const fetchAll = async (req, res, next) => {
   try {
-    const data = await User.find({}).select('-password -__v');
+    const data = await User.find({})
+      .select('-password -__v')
+      .populate('list', 'listName');
     res.json({ data });
   } catch (error) {
     next(new HttpError('Fetching users failed, please try again later', 500));
@@ -36,8 +40,10 @@ const create = async (req, res, next) => {
   const { body = {} } = req;
   let existingUser;
   try {
-    existingUser = await User.findOne(body.email);
+    existingUser = await User.findOne({ email: body.email });
+    console.log('existing', existingUser);
   } catch (error) {
+    console.log(error);
     return next(
       new HttpError('Singing up failed, please try again later', 500),
     );
@@ -88,6 +94,7 @@ const update = async (req, res, next) => {
 const deleteById = async (req, res, next) => {
   const { doc = {} } = req;
   try {
+    await List.deleteMany({ author: doc.id });
     const data = await doc.remove();
     res.json({ data });
   } catch (error) {
