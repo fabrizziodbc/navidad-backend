@@ -69,10 +69,11 @@ const create = async (req, res, next) => {
   return res.status(201).json({ list: newDocument });
 };
 const getListByUserId = async (req, res, next) => {
-  const { params } = req;
+  const { user } = req;
+  console.log('req.user.sub :', req.user.sub);
   let authorWithLists;
   try {
-    authorWithLists = await User.findById(params.userId)
+    authorWithLists = await User.findById(user.sub)
       .select('-__v')
       .populate('list', 'listName');
   } catch (error) {

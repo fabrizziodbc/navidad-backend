@@ -15,7 +15,8 @@ router
       try {
         const { user } = req;
         const myPayload = {
-          sub: user.id,
+          // eslint-disable-next-line no-underscore-dangle
+          sub: user._id,
           role: 'default',
         };
         const token = jwt.sign(myPayload, jwtSecret, {
