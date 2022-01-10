@@ -4,6 +4,7 @@ import { Result } from 'express-validator';
 import swaggerUi from 'swagger-ui-express';
 import api from './api/v1/index.js';
 import swaggerDocument from './swagger.json';
+import './api/v1/utils/auth/index.js';
 
 const app = express();
 

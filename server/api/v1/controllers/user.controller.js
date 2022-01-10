@@ -1,4 +1,5 @@
 import { validationResult } from 'express-validator';
+import bcrypt from 'bcrypt';
 import HttpError from '../models/http.error.model.js';
 import List from '../models/list.model.js';
 import User from '../models/user.model.js';
@@ -31,19 +32,34 @@ const fetchAll = async (req, res, next) => {
     next(new HttpError('Fetching users failed, please try again later', 500));
   }
 };
+
+// fetchByEmail
+const fetchByEmail = async (req, res, next) => {
+  try {
+    const data = await User.findOne({ email: req })
+      .select('-__v')
+      .populate('list', 'listName');
+    return data;
+  } catch (error) {
+    return next(
+      new HttpError('Fetching user failed, please try again later', 500),
+    );
+  }
+};
+//
+
 const create = async (req, res, next) => {
   const errors = validationResult(req);
-  console.log(errors);
   if (!errors.isEmpty()) {
     return next(errors);
   }
   const { body = {} } = req;
+  body.password = await bcrypt.hash(body.password, 10);
   let existingUser;
   try {
     existingUser = await User.findOne({ email: body.email });
     console.log('existing', existingUser);
   } catch (error) {
-    console.log(error);
     return next(
       new HttpError('Singing up failed, please try again later', 500),
     );
@@ -54,8 +70,10 @@ const create = async (req, res, next) => {
   const newDocument = new User(body);
   try {
     const data = await newDocument.save();
+    const newData = JSON.parse(JSON.stringify(data));
+    delete newData.password;
     const status = 201;
-    return res.status(status).json({ data });
+    return res.status(status).json({ newData });
   } catch (error) {
     return next(
       new HttpError('Singing up failed, please try again later', 500),
@@ -103,4 +121,4 @@ const deleteById = async (req, res, next) => {
 };
 
 // eslint-disable-next-line object-curly-newline
-export { validId, fetchAll, create, read, update, deleteById };
+export { validId, fetchAll, create, read, update, deleteById, fetchByEmail };
