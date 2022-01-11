@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema({
   },
   password: { type: String, required: true },
   list: [{ type: mongoose.Types.ObjectId, required: true, ref: 'list' }],
+  recoveryToken: { type: String, required: false },
   date: { type: Date, default: Date.now },
   active: { type: Boolean, default: true },
 });

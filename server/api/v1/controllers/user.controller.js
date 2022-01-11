@@ -99,12 +99,44 @@ const update = async (req, res, next) => {
   if (body.password !== null && body.password !== undefined) {
     doc.password = body.password;
   }
+  if (body.recoveryToken !== null && body.recoveryToken !== undefined) {
+    doc.recoveryToken = body.recoveryToken;
+  }
   try {
     console.log('doc', doc);
+    console.log('req', req);
     const data = await doc.save();
     return res.json({ data });
   } catch (error) {
+    console.log(error);
     return next(
+      new HttpError('Updating data failed, please try again later', 500),
+    );
+  }
+};
+const updateByMail = async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    next(errors);
+  }
+  const user = await User.findOne({ email: req.email });
+  if (req.name !== null && req.name !== undefined) {
+    user.name = req.name;
+  }
+  if (req.email !== null && req.email !== undefined) {
+    user.email = req.email;
+  }
+  if (req.password !== null && req.password !== undefined) {
+    user.password = req.password;
+  }
+  if (req.recoveryToken !== undefined) {
+    user.recoveryToken = req.recoveryToken;
+  }
+  try {
+    await user.save();
+  } catch (error) {
+    console.log(error);
+    next(
       new HttpError('Updating data failed, please try again later', 500),
     );
   }
@@ -121,4 +153,13 @@ const deleteById = async (req, res, next) => {
 };
 
 // eslint-disable-next-line object-curly-newline
-export { validId, fetchAll, create, read, update, deleteById, fetchByEmail };
+export {
+  validId,
+  fetchAll,
+  create,
+  read,
+  update,
+  deleteById,
+  fetchByEmail,
+  updateByMail,
+};

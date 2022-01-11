@@ -6,6 +6,10 @@ const config = {
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
   },
+  smtp: {
+    username: process.env.SMTP_USER,
+    password: process.env.SMTP_PASSWORD,
+  },
 };
 
 export default config;

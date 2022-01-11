@@ -1,32 +1,21 @@
 import express from 'express';
 import passport from 'passport';
-import jwt from 'jsonwebtoken';
-import config from '../../../config/index.js';
-
-const { jwtSecret } = config;
+import { body } from 'express-validator';
+import { signToken } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
 router
   .route('/')
   .post(
+    body('email', 'Email is required!').notEmpty(),
+    body('email', 'Format invalid').isEmail(),
+    body('password', 'Password is required!').notEmpty(),
+    body('password', 'You must use at least five (05) characters').isLength({
+      min: 5,
+    }),
+    signToken,
     passport.authenticate('local', { session: false }),
-    async (req, res, next) => {
-      try {
-        const { user } = req;
-        const myPayload = {
-          // eslint-disable-next-line no-underscore-dangle
-          sub: user._id,
-          role: 'default',
-        };
-        const token = jwt.sign(myPayload, jwtSecret, {
-          expiresIn: '2d', // 180, (para que el refresh sea cada 3 minutos)
-        });
-        res.json({ user, token });
-      } catch (error) {
-        next(error);
-      }
-    },
   );
 
 export default router;

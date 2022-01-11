@@ -2,9 +2,9 @@ import express from 'express';
 import passport from 'passport';
 /* import { body } from 'express-validator'; */
 import {
-/*   validId,
+  /*  validId, */
   create,
-  read,
+  /* read,
   update, */
   getListByUserId,
 /*   deleteById, */
@@ -14,32 +14,11 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(passport.authenticate('jwt', { session: false }), getListByUserId);
-/* .post(
-    body('author', 'author is required!').notEmpty(),
-    body('author', 'You must use at least five (03) characters')
-      .isLength({
-        min: 3,
-      })
-      .trim(),
-    body('author', 'You exceeded the maximum characters (72)')
-      .isLength({
-        max: 72,
-      })
-      .trim(),
-    body('listName', 'ListName is required!').notEmpty(),
-    body('listName', 'You must use at least five (03) characters')
-      .isLength({
-        min: 3,
-      })
-      .trim(),
-    body('listName', 'You exceeded the maximum characters (72)')
-      .isLength({
-        max: 72,
-      })
-      .trim(),
+  .get(passport.authenticate('jwt', { session: false }), getListByUserId)
+  .post(
+    passport.authenticate('jwt', { session: false }),
     create,
-  ); */
+  );
 /* router.param('id', validId);
 router
   .route('/:id')
